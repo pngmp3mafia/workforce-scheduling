@@ -1,0 +1,17 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: scheduling_sql
+    user: root
+    environment:
+      ACCEPT_EULA: "Y"
+      MSSQL_SA_PASSWORD: "YourStrong!Passw0rd"
+      MSSQL_MEMORY_LIMIT_MB: "3072"  
+    ports:
+      - "14333:1433"
+    volumes:
+      - mssql-data:/var/opt/mssql     # named volume avoids Windows ACL issues
+    restart: unless-stopped
+
+volumes:
+  mssql-data:

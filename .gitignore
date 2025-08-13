@@ -1,0 +1,17 @@
+﻿# dotnet build
+**/bin/
+**/obj/
+
+# VS / VS Code
+.vs/
+.vscode/
+
+# User files
+*.user
+*.suo
+
+# Docker SQL data (don’t commit DB files)
+ops/mssql/data/
+
+# Keep local secrets out of git during dev
+backend/src/Company.Scheduling.Api/appsettings.Development.json
