@@ -1,6 +1,5 @@
-using Company.Scheduling.Api.Contracts;
-using Company.Scheduling.Domain;
 using Company.Scheduling.Domain.ValueObjects;
+
 namespace Company.Scheduling.Domain;
 
 public class Shift

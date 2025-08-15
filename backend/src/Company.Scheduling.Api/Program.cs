@@ -5,8 +5,48 @@ using Company.Scheduling.Domain;
 using Company.Scheduling.Domain.ValueObjects;
 using Company.Scheduling.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
+using System.Text;
 
 var builder = WebApplication.CreateBuilder(args);
+
+var cfg = builder.Configuration;
+
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+  .AddJwtBearer(o =>
+  {
+    o.TokenValidationParameters = new TokenValidationParameters
+    {
+      ValidateIssuer = true,
+      ValidateAudience = true,
+      ValidateIssuerSigningKey = true,
+      ValidIssuer = cfg["Jwt:Issuer"],
+      ValidAudience = cfg["Jwt:Audience"],
+      IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(cfg["Jwt:Key"]!))
+    };
+  });
+
+builder.Services.AddAuthorization();
+
+builder.Services.AddSwaggerGen(c =>
+{
+  c.SwaggerDoc("v1", new OpenApiInfo { Title = "Scheduling API", Version = "v1" });
+  var jwt = new OpenApiSecurityScheme
+  {
+    Name = "Authorization",
+    Type = SecuritySchemeType.Http,
+    Scheme = "bearer",
+    BearerFormat = "JWT",
+    In = ParameterLocation.Header,
+    Description = "Enter JWT only (no 'Bearer ' prefix).",
+    Reference = new OpenApiReference { Type = ReferenceType.SecurityScheme, Id = JwtBearerDefaults.AuthenticationScheme }
+  };
+  c.AddSecurityDefinition(jwt.Reference.Id, jwt);
+  c.AddSecurityRequirement(new OpenApiSecurityRequirement { { jwt, Array.Empty<string>() } });
+});
+
 
 // CORS for the frontend
 builder.Services.AddCors(o => o.AddDefaultPolicy(p =>
@@ -20,6 +60,7 @@ builder.Services.AddDbContext<SchedulingDbContext>(options =>
         sql.CommandTimeout(30);
     }));
 
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
@@ -28,6 +69,8 @@ var app = builder.Build();
 app.UseCors();
 app.UseSwagger();
 app.UseSwaggerUI();
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.MapGet("/health", () => Results.Ok(new { status = "ok", time = DateTime.UtcNow }));
 
